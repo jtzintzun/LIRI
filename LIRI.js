@@ -1,9 +1,9 @@
 require("dotenv").config()
 var fs = require("fs");
-var keys = require("./keys.js")
+var keys = require("./keys.js");
 var Twitter = require('twitter');
 var Spotify = require('node-spotify-api');
-var request = require("request")
+var request = require("request");
 var inquirer = require("inquirer");
 
 var client = new Twitter(keys.twitter);
@@ -11,11 +11,12 @@ var spotify = new Spotify(keys.spotify);
 
 var command
 var input
+var limit
 
 
 questionaryCommand();
 
-// ========= Main quesationary - Function
+// ======== MAIN QUESTIONARY ====== //
 
 function questionaryCommand() {
 
@@ -36,35 +37,33 @@ function questionaryCommand() {
 
       switch (command) {
         case "My tweets":
-          myTweets()
-          log()
+          myTweets();
+          log();
           break;
 
         case "Spotify this song":
-          inputSong()
-          log()
+          inputSong();
+          log();
           break;
 
         case "Movie this":
-          inputMovie()
-          log()
+          inputMovie();
+          log();
           break;
 
         case "Do what it says":
-          doWhatItSays()
-          log()
+          doWhatItSays();
+          log();
           break;
 
         case "EXIT":
-          exit()
+          exit();
           break;
       } // Ends switch
-
     });
+} //-----------END FUNCTION
 
-}
-
-// input for movie search
+// INPUT - MOVIE SEARCH
 
 function inputMovie() {
 
@@ -80,11 +79,12 @@ function inputMovie() {
 
     .then(function(inquirerResponse) {
       input = inquirerResponse.selection
-      movieThis()
+      movieThis();
     });
-}
 
-// input for movie search
+} //-----------END FUNCTION
+
+// INPUT - SONG SEARCH
 
 function inputSong() {
 
@@ -92,19 +92,25 @@ function inputSong() {
         type: "input",
         message: "Especify the song:",
         name: "selection"
+      },
+      {
+        type: "list",
+        message: "Limit Search Results to:",
+        choices: ["1", "2", "5", "10"],
+        name: "limitSearch"
       }
 
     ])
 
     .then(function(inquirerResponse) {
       input = inquirerResponse.selection
+      limit = inquirerResponse.limitSearch
       spotifyThisSong()
     });
-}
+} //-----------END FUNCTION
 
-/// ========= functions ==============
 
-// ========= Tweeter query
+// ======== TWEETER FUNTION ====== //
 
 function myTweets() {
 
@@ -114,22 +120,24 @@ function myTweets() {
   };
   client.get('statuses/user_timeline', params, function(error, tweets, response) {
     if (!error) {
+      for (var i = 0; i < tweets.length; i++) {
 
-      console.log("========================================================================================");
-      console.log("");
-      console.log("This tweet was created at: " + tweets[0].created_at);
-      console.log("");
-      console.log("tweet: " + tweets[0].text);
-      console.log("");
-      console.log("========================================================================================");
+        console.log("========================================================================================");
+        console.log("");
+        console.log("This tweet was created at: " + tweets[i].created_at);
+        console.log("");
+        console.log("tweet: " + tweets[i].text);
+        console.log("");
+        console.log("========================================================================================");
+      }
 
       questionaryCommand()
 
     }
   });
-} //Ends function
+} //-----------END FUNCTION
 
-// ========= Spotify query
+// ======== SPOTYFY FUNTION ====== //
 
 function spotifyThisSong() {
 
@@ -139,50 +147,49 @@ function spotifyThisSong() {
     input = "The Sign, Ace of Base"
   }
 
-// request to API
-
+  // request to API
   spotify.search({
     type: 'track',
     query: input,
-    limit: 1
+    limit: limit
   }, function(err, data) {
     if (err) {
       return console.log('Error occurred: ' + err);
     }
 
-// CASE UN DEFINED SONG
+    // CASE UN DEFINED SONG
+    for (var i = 0; i < data.tracks.items.length; i++) {
 
-    if (typeof(data.tracks.items[0]) === 'undefined') {
-      console.log("*****************************************************************************************");
-      console.log("");
-      console.log("SORRY!!! We don't have this song yet!");
-      console.log("");
-      console.log("*****************************************************************************************");
-      console.log("");
+      if (typeof(data.tracks.items[i]) === 'undefined') {
+        console.log("*****************************************************************************************");
+        console.log("");
+        console.log("SORRY!!! We don't have this song yet!");
+        console.log("");
+        console.log("*****************************************************************************************");
+        console.log("");
 
-    } else {
+      } else {
 
-      console.log("");
-      console.log("========================================================================================");
-      console.log("");
-      console.log("Artist(s): " + data.tracks.items[0].album.artists[0].name);
-      console.log("");
-      console.log("The song's name: " + data.tracks.items[0].name);
-      console.log("");
-      console.log("A preview link of the song from Spotify: " + data.tracks.items[0].album.external_urls.spotify);
-      console.log("");
-      console.log("The album that the song is from: " + data.tracks.items[0].album.name);
-      console.log("");
-      console.log("========================================================================================");
-      console.log("");
+        console.log("");
+        console.log("========================================================================================");
+        console.log("");
+        console.log("Artist(s): " + data.tracks.items[i].album.artists[0].name);
+        console.log("");
+        console.log("The song's name: " + data.tracks.items[i].name);
+        console.log("");
+        console.log("A preview link of the song from Spotify: " + data.tracks.items[i].album.external_urls.spotify);
+        console.log("");
+        console.log("The album that the song is from: " + data.tracks.items[i].album.name);
+        console.log("");
+        console.log("========================================================================================");
+        console.log("");
+      }
     }
-    questionaryCommand()
-
+    questionaryCommand();
   });
+} //-----------END FUNCTION
 
-} //Ends function
-
-// ========= OMDBA query
+// ======== OMDB FUNTION ====== //
 
 function movieThis() {
 
@@ -197,7 +204,7 @@ function movieThis() {
 
     if (!error && response.statusCode === 200) {
 
-// CASE UN DEFINED MOVIE
+      // CASE UNDEFINED MOVIE
 
       if (typeof(JSON.parse(body).Title) === 'undefined') {
         console.log("*****************************************************************************************");
@@ -219,7 +226,7 @@ function movieThis() {
         console.log("IMDB rating of the movie: " + JSON.parse(body).imdbRating);
         console.log("");
 
-// CASE UN DEFINED TOTTEN TOMATOES
+        // CASE UN DEFINED TOTTEN TOMATOES
 
         if (typeof(JSON.parse(body).Ratings[1]) === 'undefined') {
           console.log("*****************************************************************************************");
@@ -246,13 +253,12 @@ function movieThis() {
         console.log("");
 
       }
-      questionaryCommand()
+      questionaryCommand();
     }
   });
+} //-----------END FUNCTION
 
-} //Ends function
-
-// ========= do what ut says query
+// ======== DO WHAT IT SAYS FUNTION ====== //
 function doWhatItSays() {
 
   fs.readFile("random.txt", "utf8", function(error, data) {
@@ -262,13 +268,30 @@ function doWhatItSays() {
     var dataArr = data.split(",");
     input = dataArr[1]
     command = dataArr[0]
-    spotifyThisSong(input)
-    questionaryCommand()
+
+    switch (command) {
+      case "My tweets":
+        myTweets();
+        log();
+        break;
+
+      case "Spotify this song":
+        limit = 1;
+        spotifyThisSong();
+        log();
+        break;
+
+      case "Movie this":
+        movieThis();
+        log();
+        break;
+
+    } // ---- End switch
+
   })
+} //-----------END FUNCTION
 
-} //Ends function
-
-// ========= log funtion
+// ======== LOG FUNTION ====== //
 
 function log() {
   fs.appendFile("log.txt", "," + command, function(err) {
@@ -276,10 +299,11 @@ function log() {
       console.log(err);
     }
   })
-}
+} //-----------END FUNCTION
 
-// ========= Exist function
+
+// ======== EXIT FUNTION ====== //
 
 function exit() {
   console.log("See you later");
-}
+} //-----------END FUNCTION
